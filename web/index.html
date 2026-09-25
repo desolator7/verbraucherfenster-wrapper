@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#eef3ef" />
+    <meta name="description" content="PFUI: aktuelle LFGB-Veröffentlichungen aus Hessen auf einer Karte entdecken." />
+    <title>PFUI</title>
+  </head>
+  <body>
+    <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+      <symbol id="icon-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></symbol>
+      <symbol id="icon-view" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><circle cx="11" cy="11" r="4"/><path d="m14 14 3 3"/></symbol>
+      <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6h12v12"/></symbol>
+      <symbol id="icon-archive" viewBox="0 0 24 24"><path d="M3 4h18v4H3zM5 8v12h14V8m-9 4h4"/></symbol>
+      <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m6 14 6-6 6 6"/></symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+      <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></symbol>
+    </svg>
+    <main class="app-shell">
+      <div id="map" aria-label="Karte der LFGB-Veröffentlichungen"></div>
+      <div class="map-overlay">
+        <section class="controls" aria-label="Suche und Umkreis">
+          <div class="search-row">
+            <form id="search-form" class="search-form glass" role="search">
+              <label class="sr-only" for="place-input">Ort oder PLZ</label>
+              <svg class="icon" aria-hidden="true"><use href="#icon-search"/></svg>
+              <input id="place-input" name="place" type="search" autocomplete="off" minlength="3" placeholder="Ort oder PLZ suchen" enterkeyhint="search" aria-controls="place-results" />
+              <button id="search-button" type="submit" aria-label="Ort oder PLZ suchen">Suchen</button>
+            </form>
+            <button id="about-button" class="glass icon-button" type="button" aria-label="Über diese Karte" title="Über diese Karte"><svg class="icon" aria-hidden="true"><use href="#icon-info"/></svg></button>
+            <div id="search-feedback" class="search-feedback glass" hidden>
+              <div class="search-feedback-heading"><p id="search-message" role="status"></p><button id="search-close" class="icon-button quiet-button" type="button" aria-label="Suchtreffer schließen"><svg class="icon" aria-hidden="true"><use href="#icon-close"/></svg></button></div>
+              <ul id="place-results" class="place-results" aria-label="Gefundene Orte"></ul>
+            </div>
+          </div>
+          <div class="filter-row">
+            <button id="locate-button" class="glass icon-button" type="button" aria-label="Eigenen Standort verwenden" title="Eigenen Standort verwenden" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-locate"/></svg></button>
+            <label class="radius-control glass" for="radius-select"><span class="sr-only">Umkreis</span><select id="radius-select" disabled><option value="5">5 km</option><option value="10" selected>10 km</option><option value="25">25 km</option><option value="50">50 km</option></select></label>
+            <button id="all-button" class="glass" type="button" aria-pressed="false">Alle</button>
+            <button id="archive-button" class="glass icon-button" type="button" aria-label="Archivierte Meldungen einblenden" title="Archivierte Meldungen einblenden" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-archive"/></svg></button>
+            <button id="view-button" class="glass icon-button" type="button" aria-label="In aktueller Ansicht suchen" title="In aktueller Ansicht suchen" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-view"/></svg></button>
+          </div>
+        </section>
+      </div>
+      <div class="map-notice glass"><span class="status-dot" aria-hidden="true"></span><p id="message" role="status">Daten werden geladen …</p><button id="retry-button" class="quiet-button" type="button" hidden>Erneut laden</button></div>
+      <aside id="results-panel" class="results glass" aria-label="Veröffentlichungen">
+        <div class="results-header">
+          <div><p class="eyebrow">LFGB-Veröffentlichungen</p><h2 id="results-heading">Einträge werden geladen …</h2></div>
+          <button id="results-toggle" class="icon-button quiet-button" type="button" aria-label="Ergebnisliste öffnen" aria-controls="results-content" aria-expanded="false"><svg class="icon" aria-hidden="true"><use href="#icon-chevron"/></svg></button>
+        </div>
+        <div id="results-content" hidden>
+          <p id="updated-at"></p>
+          <p id="results-empty" hidden>Keine Einträge gefunden. Vergrößere den Suchbereich oder wähle „Alle“.</p>
+          <ul id="results-list"></ul>
+        </div>
+      </aside>
+    </main>
+    <dialog id="about-dialog" aria-labelledby="about-heading">
+      <p class="eyebrow">PFUI</p>
+      <h2 id="about-heading">Über diese Karte</h2>
+      <p>Die Karte zeigt Veröffentlichungen nach § 40 Abs. 1a LFGB. Sie enthält auch andere Verstöße als Hygienemängel. Maßgeblich sind die Angaben beim <a href="https://verbraucherfenster.hessen.de/ernaehrung/sichere-lebensmittel/veroeffentlichung-maengel-lfgb" target="_blank" rel="noopener noreferrer">Verbraucherfenster Hessen</a>.</p>
+      <p>Die Daten werden täglich aktualisiert. Die Ortssuche nutzt Photon; die Grundkarte stammt von OpenFreeMap und OpenStreetMap. Der Standort wird nur nach deinem Klick abgefragt und nicht gespeichert.</p>
+      <p>Beim Hineinzoomen erscheinen die Namen ab Zoomstufe 14 automatisch; Liste und Tooltips zeigen das Veröffentlichungsdatum. Meldungen der letzten sieben Tage erscheinen rot, ältere orange. Sechs Monate alte Meldungen sind grau markiert und mit einem Archivsymbol gekennzeichnet. Archivdaten sind zunächst ausgeblendet und lassen sich über den grün markierten Archivknopf einblenden. Der Pfeil neben dem Namen öffnet die amtliche Originalseite. Mit der Lupe im Rahmen suchst du nach Einträgen in der aktuellen Kartenansicht.</p>
+      <p class="version">PFUI - PORTAL FÜR ÜBLE INDIGESTION · Ver. 161.26.020</p>
+      <button id="about-close" type="button">Schließen</button>
+    </dialog>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>

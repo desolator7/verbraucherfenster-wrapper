@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    image: pfui-lfgb:161.26.020
+    container_name: pfui-app
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - proxy
+    volumes:
+      - pfui-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "--max-time", "3", "--output", "/dev/null", "http://127.0.0.1:3000/healthz"]
+      interval: 120s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  pfui-data:
+    external: true
+    name: pfui-data
+
+networks:
+  proxy:
+    external: true

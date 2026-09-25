@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+metadata:
+  name: PFUI MCP identity and access
+entries:
+  - model: authentik_core.group
+    id: group-mcp
+    identifiers:
+      name: PFUI MCP
+    attrs:
+      is_superuser: false
+
+  - model: authentik_providers_oauth2.oauth2provider
+    id: provider
+    identifiers:
+      name: PFUI MCP
+    attrs:
+      authentication_flow: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+      authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+      invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+      property_mappings:
+        - !Find [authentik_providers_oauth2.scopemapping, [name, "authentik default OAuth Mapping: OpenID 'openid'"]]
+        - !Find [authentik_providers_oauth2.scopemapping, [name, "authentik default OAuth Mapping: OpenID 'email'"]]
+        - !Find [authentik_providers_oauth2.scopemapping, [name, "authentik default OAuth Mapping: OpenID 'profile'"]]
+      client_type: confidential
+      grant_types:
+        - authorization_code
+      access_code_validity: minutes=5
+      access_token_validity: minutes=5
+      include_claims_in_id_token: true
+      signing_key: !Find [authentik_crypto.certificatekeypair, [name, authentik Self-signed Certificate]]
+      redirect_uris:
+        - matching_mode: strict
+          url: https://pfui.example.com/oauth/callback
+          redirect_uri_type: authorization
+      sub_mode: hashed_user_id
+      issuer_mode: per_provider
+
+  - model: authentik_core.application
+    id: application
+    identifiers:
+      slug: pfui-mcp
+    attrs:
+      name: PFUI
+      provider: !KeyOf provider
+      meta_launch_url: https://pfui.example.com
+      meta_description: Lesender Zugriff auf LFGB-Veröffentlichungen
+      meta_publisher: PFUI
+      policy_engine_mode: any
+      group: !KeyOf group-mcp
+
+  - model: authentik_policies.policybinding
+    identifiers:
+      target: !KeyOf application
+      group: !KeyOf group-mcp
+      order: 0
+    attrs:
+      enabled: true
+      negate: false
+      failure_result: false
